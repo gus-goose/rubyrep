@@ -2,6 +2,7 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require 'optparse'
 require 'drb'
+require 'drb/drbfire'
 
 module RR
   # This class implements the functionality of the rrproxy.rb command.
@@ -15,7 +16,8 @@ module RR
     # Default options to start a DatabaseProxy server
     DEFAULT_OPTIONS = {
       :port => DatabaseProxy::DEFAULT_PORT,
-      :host => ''
+      :host => '',
+      :nat  => false,
     }
     
     # Parses the given command line parameter array.
@@ -39,6 +41,10 @@ module RR
           options[:port] = arg
         end
 
+        opts.on("-n","--[no-]nat", "true iff proxy behind NAT. Default: false") do |arg|
+          options[:nat] = arg
+        end
+        
         opts.on_tail("--help", "Show this message") do
           $stderr.puts opts
           options = nil
@@ -59,14 +65,18 @@ module RR
 
     # Builds the druby URL from the given options and returns it
     def build_url(options)
-      "druby://#{options[:host]}:#{options[:port]}"
+      protocol = (options[:nat] ? 'drbfire' : 'druby')
+      "#{protocol}://#{options[:host]}:#{options[:port]}"
     end
 
     # Starts a proxy server under the given druby URL
     def start_server(url)
       proxy = DatabaseProxy.new
 
-      DRb.start_service(url, proxy)
+      drb_options = {}
+      drb_options.update(DRbFire::ROLE => DRbFire::SERVER) if (url =~ /^drbfire/i)
+
+      DRb.start_service(url, proxy, drb_options)
       DRb.thread.join
     end
     

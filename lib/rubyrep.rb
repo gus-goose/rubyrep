@@ -1,6 +1,5 @@
 $LOAD_PATH.unshift File.dirname(__FILE__)
 $LOAD_PATH.unshift File.dirname(__FILE__) + "/rubyrep"
-$LOAD_PATH.unshift File.dirname(__FILE__) + "/drb"
 
 require 'rubygems'
 require 'yaml'
@@ -55,7 +54,6 @@ require 'replication_runner'
 require 'uninstall_runner'
 require 'generate_runner'
 require 'noisy_connection'
-require 'drbfire'
 
 Dir["#{File.dirname(__FILE__)}/rubyrep/connection_extenders/*.rb"].each do |extender|
   # jdbc_extender.rb is only loaded if we are running on jruby
