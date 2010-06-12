@@ -17,7 +17,7 @@ module RR
     
     # A simple Hash to hold Session object
     # Purpose: preventing them from being garbage collected when they are only referenced through Drb
-    attr_accessor :session_register
+    attr_accessor :session_register    
     
     def initialize
       self.session_register = {}
@@ -25,16 +25,7 @@ module RR
     
     # Create a ProxyConnection according to provided configuration Hash.
     # +config+ is a hash as described by ActiveRecord::Base#establish_connection
-    def create_session(config)
-      ################################## HACK #################################
-      # Hacky and NOT Thread Safe but the only way found that circumvents NAT...
-      Kernel.eval %Q{
-        def DRb.uri
-          "druby://#{config[:proxy_host]}:#{config[:proxy_port]}"
-        end
-      }
-      #########################################################################
-      
+    def create_session(config)      
       session = ProxyConnection.new config
       self.session_register[session] = session
       session
