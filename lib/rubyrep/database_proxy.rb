@@ -26,9 +26,6 @@ module RR
     # Create a ProxyConnection according to provided configuration Hash.
     # +config+ is a hash as described by ActiveRecord::Base#establish_connection
     def create_session(config)
-      Thread.current[:DRb]['client'].uri = "druby://#{config[:proxy_host]}:#{config[:proxy_port]}"
-require 'pp'
-pp Thread.current.keys.inject({}) {|memo, key| memo[key] = Thread.current[key]; memo}
       session = ProxyConnection.new config
       self.session_register[session] = session
       session
