@@ -190,7 +190,7 @@ module DRbFire
       end
 
      def parse_uri(uri)
-        if(%r{^#{SCHEME}://([^:]+):(\d+)(?:\?(.+))?$} =~ uri)
+        if(%r{^#{SCHEME}://([^:]*):(\d+)(?:\?(.+))?$} =~ uri)
           [$1, $2.to_i, $3]
         else
           raise DRb::DRbBadScheme, uri unless(/^#{SCHEME}/ =~ uri)
