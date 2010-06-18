@@ -1,4 +1,5 @@
 require 'drb'
+require 'drb/ssl'
 
 module RR
 
@@ -203,8 +204,15 @@ module RR
       else
         # Connect the database / proxy
         arm_config = configuration.send database
-        if arm_config.include? :proxy_host
-          drb_url = "druby://#{arm_config[:proxy_host]}:#{arm_config[:proxy_port]}"
+        if arm_config.include?(:proxy_host)
+          if arm_config.include?(:SSLCACertificateFile)
+            arm_config[:SSLVerifyMode] ||= OpenSSL::SSL::VERIFY_PEER
+            DRb.start_service nil, nil, arm_config
+            protocol = 'drbssl'
+          else
+            protocol = 'druby'
+          end
+          drb_url = "#{protocol}://#{arm_config[:proxy_host]}:#{arm_config[:proxy_port]}"
           @proxies[database] = DRbObject.new nil, drb_url
         else
           # Create fake proxy

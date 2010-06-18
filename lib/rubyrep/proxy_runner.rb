@@ -2,6 +2,7 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require 'optparse'
 require 'drb'
+require 'drb/ssl'
 
 module RR
   # This class implements the functionality of the rrproxy.rb command.
@@ -31,12 +32,20 @@ module RR
         opts.separator ""
         opts.separator "Specific options:"
 
-        opts.on("-h","--host", "=IP_ADDRESS", "IP address to listen on. Default: binds to all IP addresses of the computer") do |arg|
+        opts.on("-h", "--host", "=IP_ADDRESS", "IP address to listen on. Default: binds to all IP addresses of the computer") do |arg|
           options[:host] = arg
         end
 
-        opts.on("-p","--port", "=PORT_NUMBER", Integer, "TCP port to listen on. Default port: #{DatabaseProxy::DEFAULT_PORT}") do |arg|
+        opts.on("-p", "--port", "=PORT_NUMBER", Integer, "TCP port to listen on. Default port: #{DatabaseProxy::DEFAULT_PORT}") do |arg|
           options[:port] = arg
+        end
+
+        opts.on("-k", "--key", "=FILE", "File containing the SSL private key") do |arg|
+          options[:key] = arg
+        end
+
+        opts.on("-c", "--certificate", "=FILE", "File containing the SSL certificate") do |arg|
+          options[:certificate] = arg
         end
         
         opts.on_tail("--help", "Show this message") do
@@ -59,13 +68,28 @@ module RR
 
     # Builds the druby URL from the given options and returns it
     def build_url(options)
-      "druby://#{options[:host]}:#{options[:port]}"
+      protocol = options.include?(:certificate) ? 'drbssl' : 'druby'
+      "#{protocol}://#{options[:host]}:#{options[:port]}"
+    end
+
+    # Builds the druby config from the given options and returns it
+    def build_config(options)
+      if options.include?(:certificate)
+        {:SSLPrivateKey  => OpenSSL::PKey::RSA.new(File.read(options[:key])),
+         :SSLCertificate => OpenSSL::X509::Certificate.new(File.read(options[:certificate])),
+        }
+      else
+        nil
+      end
     end
 
     # Starts a proxy server under the given druby URL
-    def start_server(url)
+    def start_server(options)
+      url = build_url(options)
+      config = build_config(options)
+
       proxy = DatabaseProxy.new
-      DRb.start_service(url, proxy)
+      DRb.start_service(url, proxy, config)
       DRb.thread.join
     end
     
@@ -76,8 +100,7 @@ module RR
       
       options, status = runner.get_options(args)
       if options
-        url = runner.build_url(options)
-        runner.start_server(url)
+        runner.start_server(options)
       end
       status
     end

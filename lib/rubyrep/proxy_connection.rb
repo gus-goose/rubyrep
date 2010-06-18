@@ -255,7 +255,8 @@ module RR
     # Here to circumvent NAT problems
     def uri
       if config.include?(:proxy_host)
-        "druby://#{config[:proxy_host]}:#{config[:proxy_port]}"
+        protocol = config.include?(:SSLCACertificateFile) ? 'drbssl' : 'druby'
+        "#{protocol}://#{config[:proxy_host]}:#{config[:proxy_port]}"
       else
         DRb.uri rescue nil
       end
