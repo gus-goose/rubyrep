@@ -29,7 +29,7 @@ module RR
       if config.include?(:proxy_host)
         # Need to circumvent possible NAT issues
         
-        protocol = config.include?(:SSLCACertificateFile) ? 'drbssl' : 'druby'
+        protocol = config.include?(:proxy_SSLCACertificateFile) ? 'drbssl' : 'druby'
 
         # HACK. Ugly and hacky way to overcome NAT problems.
         #       Not Thread Safe!
