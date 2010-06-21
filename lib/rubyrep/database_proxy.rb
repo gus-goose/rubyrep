@@ -25,7 +25,24 @@ module RR
     
     # Create a ProxyConnection according to provided configuration Hash.
     # +config+ is a hash as described by ActiveRecord::Base#establish_connection
-    def create_session(config)      
+    def create_session(config)
+      if config.include?(:proxy_host)
+        # Need to circumvent possible NAT issues
+        
+        protocol = config.include?(:SSLCACertificateFile) ? 'drbssl' : 'druby'
+
+        # HACK. Ugly and hacky way to overcome NAT problems.
+        #       Not Thread Safe!
+        #       Will cause problems when different clients refer to the proxy
+        #       by a different NAT name.
+        # TODO. Find a better way to do this...
+        Kernel.eval %Q{
+          def DRb.uri
+            #{protocol}://#{config[:proxy_host]}:#{config[:proxy_port]}
+          end
+        }
+      end
+      
       session = ProxyConnection.new config
       self.session_register[session] = session
       session

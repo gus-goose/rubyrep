@@ -7,25 +7,6 @@ require 'forwardable'
 
 require 'active_record/connection_adapters/abstract_adapter'
 
-# Modifying DRbOjbect to circumvent problems caused by NAT
-module DRb
-  class DRbObject
-    def initialize(obj, uri=nil)
-      @uri = nil
-      @ref = nil
-      if obj.nil?
-        return if uri.nil?
-        @uri, option = DRbProtocol.uri_option(uri, DRb.config)
-        @ref = DRbURIOption.new(option) unless option.nil?
-      else
-        #
-        @uri = uri ? uri : (obj.respond_to?(:uri) ? obj.uri : (DRb.uri rescue nil))
-        @ref = obj ? DRb.to_id(obj) : nil
-      end
-    end
-  end # class DRbObject
-end # module DRb
-
 module RR
 
   # Enables the fetching of (potential large) result sets in chunks.
@@ -249,17 +230,6 @@ module RR
       self.connection = ConnectionExtenders.db_connect config
       self.config = config
       self.manual_primary_keys = {}
-    end
-
-    # Returns the druby URI of this object, using config information
-    # Here to circumvent NAT problems
-    def uri
-      if config.include?(:proxy_host)
-        protocol = config.include?(:SSLCACertificateFile) ? 'drbssl' : 'druby'
-        "#{protocol}://#{config[:proxy_host]}:#{config[:proxy_port]}"
-      else
-        DRb.uri rescue nil
-      end
     end
     
     # Destroys the session
