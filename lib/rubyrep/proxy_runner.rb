@@ -90,7 +90,7 @@ module RR
 
       proxy = DatabaseProxy.new
 
-      # DRb service fails on Exception, so restart it
+      # drbssl service service fails on Exception, so restart it
       begin
         DRb.start_service(url, proxy, config)
         DRb.thread.join
