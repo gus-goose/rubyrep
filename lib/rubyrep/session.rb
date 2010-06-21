@@ -225,11 +225,8 @@ module RR
           # Create fake proxy
           @proxies[database] = DatabaseProxy.new
         end
-#TODO(kkatsiap): Remove
-require 'pp'
-pp @proxies
         @connections[database] = @proxies[database].create_session arm_config
-#pp @connections
+
         send(database).manual_primary_keys = manual_primary_keys(database)
       end
     end
