@@ -38,7 +38,7 @@ module RR
         # TODO. Find a better way to do this...
         Kernel.eval %Q{
           def DRb.uri
-            #{protocol}://#{config[:proxy_host]}:#{config[:proxy_port]}
+            "#{protocol}://#{config[:proxy_host]}:#{config[:proxy_port]}"
           end
         }
       end

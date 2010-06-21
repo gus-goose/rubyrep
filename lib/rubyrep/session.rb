@@ -205,7 +205,7 @@ module RR
         # Connect the database / proxy
         arm_config = configuration.send database
         if arm_config.include?(:proxy_host)
-          if arm_config.include?(:SSLCACertificateFile)
+          if arm_config.include?(:proxy_SSLCACertificateFile)
             arm_config[:SSLVerifyMode] ||= OpenSSL::SSL::VERIFY_PEER
             DRb.start_service nil, nil, arm_config
             protocol = 'drbssl'
@@ -218,8 +218,10 @@ module RR
           # Create fake proxy
           @proxies[database] = DatabaseProxy.new
         end
+require 'pp'
+pp @proxies
         @connections[database] = @proxies[database].create_session arm_config
-
+pp @connections
         send(database).manual_primary_keys = manual_primary_keys(database)
       end
     end
