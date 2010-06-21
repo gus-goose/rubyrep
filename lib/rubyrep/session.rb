@@ -206,7 +206,14 @@ module RR
         arm_config = configuration.send database
         if arm_config.include?(:proxy_host)
           if arm_config.include?(:proxy_SSLCACertificateFile)
-            arm_config[:SSLVerifyMode] ||= OpenSSL::SSL::VERIFY_PEER
+            
+            drb_config = arm_config.inject({}) do |memo, pair|
+              match = pair.first.to_s.scan(/proxy_(.+)/)
+              memo[match.first.first.to_sym] = pair.second unless match.empty?
+              memo
+            end
+            drb_config[:SSLVerifyMode] ||= OpenSSL::SSL::VERIFY_PEER
+            
             DRb.start_service nil, nil, arm_config
             protocol = 'drbssl'
           else
@@ -218,10 +225,11 @@ module RR
           # Create fake proxy
           @proxies[database] = DatabaseProxy.new
         end
+#TODO(kkatsiap): Remove
 require 'pp'
 pp @proxies
         @connections[database] = @proxies[database].create_session arm_config
-pp @connections
+#pp @connections
         send(database).manual_primary_keys = manual_primary_keys(database)
       end
     end
