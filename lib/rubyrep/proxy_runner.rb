@@ -89,8 +89,19 @@ module RR
       config = build_config(options)
 
       proxy = DatabaseProxy.new
-      DRb.start_service(url, proxy, config)
-      DRb.thread.join
+
+      # DRb service fails on Exception, so restart it
+      begin
+        DRb.start_service(url, proxy, config)
+        DRb.thread.join
+        done = true
+      rescue Errno::ECONNABORTED, Errno::ECONNRESET, Errno::EHOSTUNREACH, Errno::EPIPE, Errno::ETIMEDOUT, OpenSSL::SSL::SSLError => e
+        STDERR.puts "#{e.class.name}: #{e}"
+        done = false
+      rescue Exception => e
+        STDERR.puts "#{e.class.name}: #{e}"
+        done = true
+      end until done
     end
     
     # Runs the ProxyRunner (processing of command line & starting of server)
